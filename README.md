@@ -1,1 +1,1 @@
-# flickrDownloader
+Flickr Download Server
