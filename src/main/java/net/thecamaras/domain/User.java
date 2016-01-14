@@ -17,8 +17,12 @@ public class User {
     @GeneratedValue
     private Integer id;
 
-    @NotNull
-    private String name;
+    private String flickrId;
+
+    private String username;
+    private Boolean autoDownload;
+    private Boolean autoDownloadGroup;
+    private Boolean ignoreSizeCheck;
 
     public Integer getId() {
         return id;
@@ -28,11 +32,43 @@ public class User {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getFlickrId() {
+        return flickrId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFlickrId(String flickrId) {
+        this.flickrId = flickrId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public Boolean getAutoDownload() {
+        return autoDownload;
+    }
+
+    public void setAutoDownload(Boolean autoDownload) {
+        this.autoDownload = autoDownload;
+    }
+
+    public Boolean getAutoDownloadGroup() {
+        return autoDownloadGroup;
+    }
+
+    public void setAutoDownloadGroup(Boolean autoDownloadGroup) {
+        this.autoDownloadGroup = autoDownloadGroup;
+    }
+
+    public Boolean getIgnoreSizeCheck() {
+        return ignoreSizeCheck;
+    }
+
+    public void setIgnoreSizeCheck(Boolean ignoreSizeCheck) {
+        this.ignoreSizeCheck = ignoreSizeCheck;
     }
 }

@@ -12,18 +12,6 @@ import net.thecamaras.repository.UserRepository;
 @RestController
 @SpringBootApplication
 public class FlickrDownloader {
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @RequestMapping("/")
-    String home() {
-        User me = new User();
-        me.setName("Ross");
-        userRepository.save(me);
-        return "Hello World!" + userRepository.getUsercount();
-    }
-
     public static void main(String[] args) throws Exception {
         SpringApplication.run(FlickrDownloader.class, args);
     }

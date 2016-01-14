@@ -1,3 +1,4 @@
 .idea/
+/flickr_db.*
 *.iml
 target
