@@ -9,7 +9,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 
+import net.thecamaras.domain.ImportHistoryLocation;
 import net.thecamaras.domain.Photo;
+import net.thecamaras.repository.ImportHistoryRepository;
 import net.thecamaras.repository.PhotoRepository;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.slf4j.Logger;
@@ -42,8 +44,10 @@ public class ImportService {
     @Autowired
     private PhotoRepository photoRepository;
 
-    private File downloadRoot;
+    @Autowired
+    private ImportHistoryRepository importHistoryRepository;
 
+    private File downloadRoot;
     private Pattern idLookup;
     private Pattern photoLookup;
     private Pattern photoLookup_v1;
@@ -52,7 +56,7 @@ public class ImportService {
     @PostConstruct
     public void init() {
         String root = systemService.getProperty(SystemConfig.DOWNLOAD_ROOT);
-        if (root == null){
+        if (root == null) {
             root = ".";
         }
         downloadRoot = new File(root);
@@ -75,6 +79,17 @@ public class ImportService {
     }
 
     private int searchDirectory(File root) {
+        String path = "";
+        try {
+            path = root.getCanonicalPath();
+            if (root != downloadRoot && importHistoryRepository.getFirstByFileLocation(path) != null){
+                return 0;
+            }
+        } catch (IOException e) {
+            logger.error("Problem getting import location", e);
+        }
+
+
         int count = 0;
         User user = null;
         ArrayList<Photo> photos = new ArrayList<>();
@@ -86,7 +101,7 @@ public class ImportService {
             String userId = file.getName();
             Matcher matcher = idLookup.matcher(userId);
             if (matcher.find()) {
-                logger.info(String.format("User found %s", userId));
+                logger.debug(String.format("User found %s", userId));
                 user = userRepository.getFirstByFlickrId(userId);
                 if (user != null) {
                     logger.debug("User already found " + userId);
@@ -105,7 +120,6 @@ public class ImportService {
                 photo.setFlickrId(matcher.group(3));
                 photo.setDatePosted(parseDate(matcher.group(1)));
                 photo.setDateDownloaded(new Date(file.lastModified()));
-                logger.info("Size: " + file.length());
                 photo.setDeleted(file.length() < 10);
                 photo.setFileLocation(getLocationToRoot(file));
                 photos.add(photo);
@@ -124,16 +138,46 @@ public class ImportService {
                 continue;
             }
         }
+        if (root == downloadRoot){
+            // don't save the root;
+            return count;
+        }
 
-        if (user != null) {
-            userRepository.save(user);
-            for(Photo photo : photos){
-                photo.setOwnerId(user.getFlickrId());
+        if (user == null && photos.size() > 0) {
+            logger.info("Attempting to determine user from photos");
+            user = getUserFromPhoto(photos.get(0));
+            if (user == null) {
+                user = getUserFromPhoto(photos.get(photos.size() - 1));
             }
+
+            for (int i = 1; i < photos.size() - 1; i += photos.size() / 4) {
+                user = getUserFromPhoto(photos.get(i));
+                if (user != null) {
+                    break;
+                }
+            }
+        }
+
+        if (user == null) {
+            logger.info("Creating synthetic user");
+            user = new User();
+            user.setInactive(true);
+            user.setUsername(root.getName());
+            user.addUsername(root.getName());
+        }
+
+        logger.info(String.format("Found User: %s, photos %d", user.getUsername(), photos.size()));
+        userRepository.save(user);
+        for (Photo photo : photos) {
+            photo.setOwnerId(user.getFlickrId());
         }
         if (photos.size() > 0) {
             photoRepository.save(photos);
         }
+
+        ImportHistoryLocation history = new ImportHistoryLocation();
+        history.setFileLocation(path);
+        importHistoryRepository.save(history);
         return count;
     }
 
@@ -151,4 +195,19 @@ public class ImportService {
     }
 
 
+    private User getUserFromPhoto(Photo photo) {
+        if (photo.getFlickrId() != null) {
+            User user = flickrService.getUserFromPhotoId(photo.getFlickrId());
+            if (user != null) {
+                User pUser = userRepository.getFirstByFlickrId(user.getFlickrId());
+                if (pUser != null) {
+                    pUser.setUsername(user.getUsername());
+                    pUser.addUsername(user.getUsername());
+                    return pUser;
+                }
+                return user;
+            }
+        }
+        return null;
+    }
 }

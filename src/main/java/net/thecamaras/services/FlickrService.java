@@ -66,6 +66,22 @@ public class FlickrService {
         return null;
     }
 
+    public User getUserFromPhotoId(String photoId){
+        PhotosInterface photosInterface = flickr.getPhotosInterface();
+        try {
+            com.flickr4java.flickr.photos.Photo photo = photosInterface.getPhoto(photoId);
+            User result = new User(photo.getOwner());
+            return result;
+        } catch (FlickrException e) {
+            if ("1".equals(e.getErrorCode())) {
+                return null;
+            }
+
+            logger.error("Error loading photo info " + photoId + " Message: " + e.getErrorMessage());
+        }
+        return null;
+    }
+
     public User getUser(String userId) {
         PeopleInterface peopleInterface = flickr.getPeopleInterface();
 

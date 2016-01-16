@@ -24,6 +24,7 @@ public class Photo {
     private String description;
     private String fileLocation;
     private boolean deleted;
+    private String secret;
 
     public Photo() {
         super();
@@ -114,5 +115,13 @@ public class Photo {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
     }
 }

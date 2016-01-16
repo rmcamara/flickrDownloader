@@ -1,8 +1,8 @@
 package net.thecamaras.domain;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by qsz922 on 2016/01/13.
@@ -14,20 +14,37 @@ public class User {
     @GeneratedValue
     private Integer id;
 
+    @Column(unique = true)
     private String flickrId;
 
     private String username;
-    private Boolean autoDownload;
-    private Boolean autoDownloadGroup;
-    private Boolean ignoreSizeCheck;
+    private boolean autoDownload;
+    private boolean autoDownloadGroup;
+    private boolean ignoreSizeCheck;
+    private boolean inactive;
 
-    public User(){
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<UsernameHisotry> previousNames;
+
+    public User() {
         super();
+        previousNames = new HashSet<>();
     }
 
-    public User(com.flickr4java.flickr.people.User source){
+    public User(com.flickr4java.flickr.people.User source) {
+        this();
         setUsername(source.getUsername());
         setFlickrId(source.getId());
+        addUsername(source.getUsername());
+    }
+
+    public void addUsername(String username) {
+        UsernameHisotry record = new UsernameHisotry();
+        record.setUsername(username);
+        previousNames.add(record);
+        if (record.getUser() != this) {
+            record.setUser(this);
+        }
     }
 
     public Integer getId() {
@@ -76,5 +93,45 @@ public class User {
 
     public void setIgnoreSizeCheck(Boolean ignoreSizeCheck) {
         this.ignoreSizeCheck = ignoreSizeCheck;
+    }
+
+    public boolean isAutoDownload() {
+        return autoDownload;
+    }
+
+    public void setAutoDownload(boolean autoDownload) {
+        this.autoDownload = autoDownload;
+    }
+
+    public boolean isAutoDownloadGroup() {
+        return autoDownloadGroup;
+    }
+
+    public void setAutoDownloadGroup(boolean autoDownloadGroup) {
+        this.autoDownloadGroup = autoDownloadGroup;
+    }
+
+    public boolean isIgnoreSizeCheck() {
+        return ignoreSizeCheck;
+    }
+
+    public void setIgnoreSizeCheck(boolean ignoreSizeCheck) {
+        this.ignoreSizeCheck = ignoreSizeCheck;
+    }
+
+    public boolean isInactive() {
+        return inactive;
+    }
+
+    public void setInactive(boolean inactive) {
+        this.inactive = inactive;
+    }
+
+    public Set<UsernameHisotry> getPreviousNames() {
+        return previousNames;
+    }
+
+    public void setPreviousNames(Set<UsernameHisotry> previousNames) {
+        this.previousNames = previousNames;
     }
 }

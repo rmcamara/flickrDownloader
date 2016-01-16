@@ -13,6 +13,8 @@ public class SystemConfig {
     public static final String TOKEN = "TOKEN";
     public static final String TOKEN_SECRET = "TOKEN_SECRET";
     public static final String DOWNLOAD_ROOT = "DOWNLOAD_ROOT";
+    public static final String MAX_DOWNLOAD = "MAX_DOWNLOAD";
+    public static final String AUTO_MAX_DAY = "AUTO_MAX_DAY";
 
     @Id
     @GeneratedValue
