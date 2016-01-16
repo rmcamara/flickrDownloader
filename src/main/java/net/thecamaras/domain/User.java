@@ -24,6 +24,15 @@ public class User {
     private Boolean autoDownloadGroup;
     private Boolean ignoreSizeCheck;
 
+    public User(){
+        super();
+    }
+
+    public User(com.flickr4java.flickr.people.User source){
+        setUsername(source.getUsername());
+        setFlickrId(source.getId());
+    }
+
     public Integer getId() {
         return id;
     }

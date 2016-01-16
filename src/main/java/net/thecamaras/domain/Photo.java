@@ -24,6 +24,20 @@ public class Photo {
     private String description;
     private String fileLocation;
 
+    public Photo() {
+        super();
+    }
+
+    public Photo(com.flickr4java.flickr.photos.Photo source) {
+        setFlickrId(source.getId());
+        if (source.getOwner() != null) {
+            setOwnerId(source.getOwner().getId());
+        }
+        setTitle(source.getTitle());
+        setDescription(source.getDescription());
+        setDatePosted(source.getDatePosted());
+    }
+
     @PrePersist
     public void downloadedOn() {
         dateDownloaded = new Date();

@@ -2,3 +2,4 @@
 /flickr_db.*
 *.iml
 target
+/data/

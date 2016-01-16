@@ -12,4 +12,6 @@ public interface UserRepository extends CrudRepository<User, Integer> {
     @Query("SELECT COUNT(u) FROM User u")
     Long getUsercount();
 
+    User getFirstByFlickrId(String flickrId);
+
 }

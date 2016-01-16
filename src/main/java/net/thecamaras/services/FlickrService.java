@@ -6,9 +6,12 @@ import com.flickr4java.flickr.REST;
 import com.flickr4java.flickr.RequestContext;
 import com.flickr4java.flickr.auth.Auth;
 import com.flickr4java.flickr.auth.AuthInterface;
+import com.flickr4java.flickr.people.PeopleInterface;
 import com.flickr4java.flickr.photos.PhotosInterface;
 import net.thecamaras.domain.Photo;
 import net.thecamaras.domain.SystemConfig;
+import net.thecamaras.domain.User;
+
 import org.scribe.model.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +41,7 @@ public class FlickrService {
     private Flickr flickr;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         try {
 
             flickr = new Flickr(apiKey, apiSecret, new REST());
@@ -51,18 +54,33 @@ public class FlickrService {
         }
     }
 
-    public Photo getPhoto(String photoId){
+    public Photo getPhoto(String photoId) {
         PhotosInterface photosInterface = flickr.getPhotosInterface();
         try {
-            com.flickr4java.flickr.photos.Photo photo =  photosInterface.getPhoto(photoId);
-            Photo result = new Photo();
-            result.setFlickrId(photo.getId());
-            result.setOwnerId(photo.getOwner().getId());
-            result.setTitle(photo.getTitle());
+            com.flickr4java.flickr.photos.Photo photo = photosInterface.getPhoto(photoId);
+            Photo result = new Photo(photo);
             return result;
         } catch (FlickrException e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    public User getUser(String userId) {
+        PeopleInterface peopleInterface = flickr.getPeopleInterface();
+
+        try {
+            com.flickr4java.flickr.people.User user = peopleInterface.getInfo(userId);
+            User result = new User(user);
+            return result;
+        } catch (FlickrException e) {
+            if ("1".equals(e.getErrorCode())) {
+                return null;
+            }
+
+            logger.error("Error loading user info " + userId + " Message: " + e.getErrorMessage());
+        }
+
         return null;
     }
 }

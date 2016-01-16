@@ -12,6 +12,7 @@ public class SystemConfig {
 
     public static final String TOKEN = "TOKEN";
     public static final String TOKEN_SECRET = "TOKEN_SECRET";
+    public static final String DOWNLOAD_ROOT = "DOWNLOAD_ROOT";
 
     @Id
     @GeneratedValue
