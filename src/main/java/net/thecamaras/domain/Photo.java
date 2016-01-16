@@ -7,22 +7,23 @@ import java.util.Date;
  * Created by rcamara on 1/13/2016.
  */
 @Entity
+@Table(indexes = {@Index(name = "idx_owner", columnList = "ownerId")})
 public class Photo {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    @Column(nullable = false)
     private String ownerId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String flickrId;
     private Date datePosted;
     private Date dateDownloaded;
     private String title;
     private String description;
     private String fileLocation;
+    private boolean deleted;
 
     public Photo() {
         super();
@@ -105,5 +106,13 @@ public class Photo {
 
     public void setFileLocation(String fileLocation) {
         this.fileLocation = fileLocation;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
