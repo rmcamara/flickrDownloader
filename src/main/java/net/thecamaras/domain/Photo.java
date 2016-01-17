@@ -16,15 +16,23 @@ public class Photo {
 
     private String ownerId;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String flickrId;
     private Date datePosted;
     private Date dateDownloaded;
+
+    @Column(length = 1024)
     private String title;
+
+    @Column(length = 2024)
     private String description;
+
+    @Column(length = 1024)
     private String fileLocation;
     private boolean deleted;
     private String secret;
+
+    private boolean flagRemoval;
 
     public Photo() {
         super();

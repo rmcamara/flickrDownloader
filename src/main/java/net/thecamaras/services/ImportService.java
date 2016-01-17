@@ -104,6 +104,7 @@ public class ImportService {
                 logger.debug(String.format("User found %s", userId));
                 user = userRepository.getFirstByFlickrId(userId);
                 if (user != null) {
+                    user.addUsername(root.getName());
                     logger.debug("User already found " + userId);
                 } else {
                     user = flickrService.getUser(userId);
@@ -163,8 +164,9 @@ public class ImportService {
             user = new User();
             user.setInactive(true);
             user.setUsername(root.getName());
-            user.addUsername(root.getName());
         }
+
+        user.addUsername(root.getName());
 
         logger.info(String.format("Found User: %s, photos %d", user.getUsername(), photos.size()));
         userRepository.save(user);

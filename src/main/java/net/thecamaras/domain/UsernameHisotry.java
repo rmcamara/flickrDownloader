@@ -53,4 +53,20 @@ public class UsernameHisotry {
             user.getPreviousNames().add(this);
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UsernameHisotry)) return false;
+
+        UsernameHisotry that = (UsernameHisotry) o;
+
+        return username.equals(that.username);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return username.hashCode();
+    }
 }
