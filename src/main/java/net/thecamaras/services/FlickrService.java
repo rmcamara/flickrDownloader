@@ -7,7 +7,10 @@ import com.flickr4java.flickr.RequestContext;
 import com.flickr4java.flickr.auth.Auth;
 import com.flickr4java.flickr.auth.AuthInterface;
 import com.flickr4java.flickr.people.PeopleInterface;
+import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.PhotosInterface;
+import com.flickr4java.flickr.photos.SearchParameters;
+import com.flickr4java.flickr.photos.Size;
 import net.thecamaras.domain.Photo;
 import net.thecamaras.domain.SystemConfig;
 import net.thecamaras.domain.User;
@@ -20,6 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rcamara on 1/14/2016.
@@ -43,7 +50,6 @@ public class FlickrService {
     @PostConstruct
     public void init() {
         try {
-
             flickr = new Flickr(apiKey, apiSecret, new REST());
             AuthInterface authInterface = flickr.getAuthInterface();
             Auth token = authInterface.checkToken(new Token(systemService.getProperty(SystemConfig.TOKEN), systemService.getProperty(SystemConfig.TOKEN_SECRET)));
@@ -51,6 +57,17 @@ public class FlickrService {
             logger.info("startup authentication success");
         } catch (Exception e) {
             logger.error("startup authentication failed");
+        }
+    }
+
+    public void doAuthenticate(){
+        try {
+            AuthInterface authInterface = flickr.getAuthInterface();
+            Auth token = authInterface.checkToken(new Token(systemService.getProperty(SystemConfig.TOKEN), systemService.getProperty(SystemConfig.TOKEN_SECRET)));
+            RequestContext.getRequestContext().setAuth(token);
+            logger.info("authentication success");
+        } catch (Exception e) {
+            logger.error("authentication failed");
         }
     }
 
@@ -65,6 +82,8 @@ public class FlickrService {
         }
         return null;
     }
+
+
 
     public User getUserFromPhotoId(String photoId){
         PhotosInterface photosInterface = flickr.getPhotosInterface();
@@ -98,5 +117,53 @@ public class FlickrService {
         }
 
         return null;
+    }
+
+    public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotos(String userId, int page, int pageSize){
+        PhotosInterface photosInterface = flickr.getPhotosInterface();
+        SearchParameters params = new SearchParameters();
+        params.setUserId(userId);
+        params.setSafeSearch(Flickr.SAFETYLEVEL_RESTRICTED);
+        params.setExtras(getExtras());
+
+        try {
+            return photosInterface.search(params, pageSize, page);
+        } catch (FlickrException e) {
+            String msg = String.format("Error getting user (%s, %d). Caused by: %s-%s", userId, page, e.getErrorCode(), e.getErrorMessage());
+            logger.error(String.format(msg));
+            logger.debug(msg, e);
+        }
+        return null;
+    }
+
+    public Size getBestPhoto(String photoId){
+        PhotosInterface photosInterface = flickr.getPhotosInterface();
+
+        try {
+            Collection<Size> sizes = photosInterface.getSizes(photoId);
+            Size size = new Size();
+            long sizeVal = 0;
+            for (Size csize : sizes) {
+                long tempVal = csize.getWidth() * csize.getHeight();
+                if (tempVal > sizeVal) {
+                    size = csize;
+                    sizeVal = tempVal;
+                }
+            }
+
+            return size;
+        } catch (FlickrException e) {
+            String msg = String.format("Error getting photo (%s. Caused by: %s-%s", photoId, e.getErrorCode(), e.getErrorMessage());
+            logger.error(String.format(msg));
+            logger.debug(msg, e);
+            return null;
+        }
+    }
+
+    protected Set<String> getExtras() {
+        Set<String> results = new HashSet<>();
+        results.add("date_upload");
+        results.add("description");
+        return results;
     }
 }

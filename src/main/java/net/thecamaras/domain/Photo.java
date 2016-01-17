@@ -46,6 +46,7 @@ public class Photo {
         setTitle(source.getTitle());
         setDescription(source.getDescription());
         setDatePosted(source.getDatePosted());
+        setSecret(source.getSecret());
     }
 
     @PrePersist
