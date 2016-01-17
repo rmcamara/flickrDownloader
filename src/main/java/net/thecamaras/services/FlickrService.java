@@ -6,6 +6,8 @@ import com.flickr4java.flickr.REST;
 import com.flickr4java.flickr.RequestContext;
 import com.flickr4java.flickr.auth.Auth;
 import com.flickr4java.flickr.auth.AuthInterface;
+import com.flickr4java.flickr.groups.Group;
+import com.flickr4java.flickr.groups.pools.PoolsInterface;
 import com.flickr4java.flickr.people.PeopleInterface;
 import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.PhotosInterface;
@@ -130,6 +132,30 @@ public class FlickrService {
             return photosInterface.search(params, pageSize, page);
         } catch (FlickrException e) {
             String msg = String.format("Error getting user (%s, %d). Caused by: %s-%s", userId, page, e.getErrorCode(), e.getErrorMessage());
+            logger.error(String.format(msg));
+            logger.debug(msg, e);
+        }
+        return null;
+    }
+
+    public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotosInGroup(String groupId, String userId, int page, int pageSize){
+        PoolsInterface poolsInterface = flickr.getPoolsInterface();
+        try {
+            return poolsInterface.getPhotos(groupId, userId, null, getExtras(), pageSize, page);
+        } catch (FlickrException e) {
+            String msg = String.format("Error getting user(%s, %d) in group(%s). Caused by: %s-%s", userId, page, groupId, e.getErrorCode(), e.getErrorMessage());
+            logger.error(String.format(msg));
+            logger.debug(msg, e);
+        }
+        return null;
+    }
+
+    public Collection<Group> getMyGroups(){
+        PoolsInterface poolsInterface = flickr.getPoolsInterface();
+        try {
+            return poolsInterface.getGroups();
+        } catch (FlickrException e) {
+            String msg = String.format("Error getting my groups. Caused by: %s-%s",e.getErrorCode(), e.getErrorMessage());
             logger.error(String.format(msg));
             logger.debug(msg, e);
         }

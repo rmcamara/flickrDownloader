@@ -27,4 +27,14 @@ public class DownloadController {
     public int downloadUser(@PathVariable String id){
         return downloadService.downloadUser(id);
     }
+
+    @RequestMapping(value = "/group/{grouId}/user/{userId}", method = RequestMethod.GET)
+    public int downloadUser(@PathVariable String grouId, @PathVariable String userId){
+        return downloadService.downloadUserByGroup(userId, grouId);
+    }
+
+    @RequestMapping(value = "/user/{userId}/allGroups", method = RequestMethod.GET)
+    public int downloadUserInGroups( @PathVariable String userId){
+        return downloadService.downloadUserAllGroups(userId);
+    }
 }

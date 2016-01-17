@@ -1,5 +1,6 @@
 package net.thecamaras.services;
 
+import com.flickr4java.flickr.groups.Group;
 import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.Size;
 import net.thecamaras.domain.Photo;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collection;
 
 /**
  * Created by rcamara on 1/14/2016.
@@ -85,7 +87,6 @@ public class DownloadService {
         logger.info("Downloading photos for: " + userId);
         flickrService.doAuthenticate();
 
-
         User user = getUser(userId);
         if (user == null) {
             return 0;
@@ -107,6 +108,60 @@ public class DownloadService {
 
         logger.info("Downloaded photos for: " + userId);
         return downloadCount;
+    }
+
+    public int downloadUserByGroup(String userId, String groupId){
+        logger.info("Downloading photos for: " + userId + " in " + groupId);
+        flickrService.doAuthenticate();
+
+        User user = getUser(userId);
+        if (user == null) {
+            return 0;
+        }
+        File destination = getDestination(user);
+        int downloadCount = downloadUserByGroup(user, destination, groupId);
+
+        logger.info("Downloaded photos for: " + userId);
+        return downloadCount;
+    }
+
+    public int downloadUserAllGroups(String userId){
+        logger.info("Downloading photos for all groups: " + userId);
+        flickrService.doAuthenticate();
+
+        User user = getUser(userId);
+        if (user == null) {
+            return 0;
+        }
+        File destination = getDestination(user);
+        Collection<Group> groupList = flickrService.getMyGroups();
+        int downloadCount = 0;
+        for (Group group : groupList) {
+            logger.info("Downloading from " + group.getName());
+            downloadCount = downloadUserByGroup(user, destination, group.getId());
+        }
+
+        logger.info("Downloaded photos for: " + userId);
+        return downloadCount;
+    }
+
+    private int downloadUserByGroup(User user, File destination, String groupId){
+        int downloadCount = 0;
+        PhotoList<com.flickr4java.flickr.photos.Photo> photoList = new PhotoList<>();
+        do {
+            photoList = flickrService.getUserPhotosInGroup(groupId, user.getFlickrId(), photoList.getPage() + 1, USER_PAGE_SIZE);
+            if (photoList.getPage() == 1) {
+                logger.info(String.format("Downloading %d images from %s", photoList.getTotal(), groupId));
+            }
+            downloadCount++;
+
+            for (int i = 0; i < photoList.size(); i++) {
+                com.flickr4java.flickr.photos.Photo photo = photoList.get(i);
+                writeImage(photo, user, destination);
+            }
+            downloadCount += photoList.getPerPage();
+        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
+        return  downloadCount;
     }
 
     private boolean writeImage(com.flickr4java.flickr.photos.Photo photo, User user, File destination) {
