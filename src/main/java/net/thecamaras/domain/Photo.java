@@ -132,4 +132,12 @@ public class Photo {
     public void setSecret(String secret) {
         this.secret = secret;
     }
+
+    public boolean isFlagRemoval() {
+        return flagRemoval;
+    }
+
+    public void setFlagRemoval(boolean flagRemoval) {
+        this.flagRemoval = flagRemoval;
+    }
 }

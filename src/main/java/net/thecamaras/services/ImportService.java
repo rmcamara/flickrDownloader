@@ -196,7 +196,6 @@ public class ImportService {
         return downloadRoot.toURI().relativize(file.toURI()).getPath();
     }
 
-
     private User getUserFromPhoto(Photo photo) {
         if (photo.getFlickrId() != null) {
             User user = flickrService.getUserFromPhotoId(photo.getFlickrId());
