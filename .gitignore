@@ -3,4 +3,4 @@
 *.iml
 target
 /data/
-server.log
+server.log*

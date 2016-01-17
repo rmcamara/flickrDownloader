@@ -1,29 +1,28 @@
 package net.thecamaras.services;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.PostConstruct;
-
 import net.thecamaras.domain.ImportHistoryLocation;
 import net.thecamaras.domain.Photo;
+import net.thecamaras.domain.SystemConfig;
+import net.thecamaras.domain.User;
 import net.thecamaras.repository.ImportHistoryRepository;
 import net.thecamaras.repository.PhotoRepository;
+import net.thecamaras.repository.UserRepository;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import net.thecamaras.domain.SystemConfig;
-import net.thecamaras.domain.User;
-import net.thecamaras.repository.UserRepository;
-
+import javax.annotation.PostConstruct;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by rcamara on 1/14/2016.
@@ -78,11 +77,57 @@ public class ImportService {
         return searchDirectory(downloadRoot);
     }
 
+    public void loadAutoDownload() {
+        int usersUpdated = 0;
+        BufferedReader br = null;
+        try {
+            String line;
+            br = new BufferedReader(new FileReader(new File(downloadRoot, "autodownload.txt")));
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                User user = userRepository.getFirstByFlickrId(parts[0]);
+                if (user == null){
+                    logger.warn("User not found: " + line);
+                    continue;
+                }
+                if (parts.length > 1) {
+                    user.setIgnoreSizeCheck(Boolean.valueOf(parts[1]));
+                } else {
+                    user.setIgnoreSizeCheck(false);
+                }
+                if (parts.length > 2) {
+                    user.setAutoDownload(Boolean.valueOf(parts[2]));
+                } else {
+                    user.setAutoDownload(true);
+                }
+
+                if (parts.length > 3) {
+                    user.setAutoDownloadGroup(Boolean.valueOf(parts[3]));
+                } else {
+                    user.setAutoDownloadGroup(true);
+                }
+
+                userRepository.save(user);
+                usersUpdated++;
+            }
+        } catch (IOException e) {
+            logger.error("problem reading auto file");
+        } finally {
+            try {
+                if (br != null)
+                    br.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        logger.info("Users auto download information updated: " + usersUpdated);
+    }
+
     private int searchDirectory(File root) {
         String path = "";
         try {
             path = root.getCanonicalPath();
-            if (root != downloadRoot && importHistoryRepository.getFirstByFileLocation(path) != null){
+            if (root != downloadRoot && importHistoryRepository.getFirstByFileLocation(path) != null) {
                 return 0;
             }
         } catch (IOException e) {
@@ -139,7 +184,7 @@ public class ImportService {
                 continue;
             }
         }
-        if (root == downloadRoot){
+        if (root == downloadRoot) {
             // don't save the root;
             return count;
         }

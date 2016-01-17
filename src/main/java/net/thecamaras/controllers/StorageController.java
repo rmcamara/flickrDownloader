@@ -30,6 +30,11 @@ public class StorageController {
         return importService.loadUsers();
     }
 
+    @RequestMapping(value = "/readAutoFile", method = RequestMethod.GET)
+    public void loadAutoDownload(){
+        importService.loadAutoDownload();
+    }
+
     @RequestMapping(value = "/deleteFlagged", method = RequestMethod.GET)
     public Integer deleteFlagged(){
         return storageService.deleteFlaggedFiles();

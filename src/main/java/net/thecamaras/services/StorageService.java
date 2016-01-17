@@ -87,7 +87,7 @@ public class StorageService {
                     file.delete();
                     filesDeleted++;
                 } catch (IOException e) {
-                    logger.error("error removing the file", e);
+                    logger.error("error removing the file " + photo.toString(), e);
                 }
             }
 
