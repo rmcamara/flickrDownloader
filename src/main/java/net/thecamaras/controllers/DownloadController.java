@@ -3,10 +3,7 @@ package net.thecamaras.controllers;
 
 import net.thecamaras.services.DownloadService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Created by rcamara on 1/14/2016.
@@ -19,8 +16,8 @@ public class DownloadController {
     private DownloadService downloadService;
 
     @RequestMapping(value = "/photo/{id}", method = RequestMethod.GET)
-    public String getPhotoDetails(@PathVariable String id) {
-        return downloadService.downloadPhoto(id);
+    public boolean getPhotoDetails(@PathVariable String id, @RequestParam(name="useCommon", required = false, defaultValue = "true") boolean useCommon) {
+        return downloadService.downloadPhoto(id, useCommon);
     }
 
     @RequestMapping(value = "/user/{id}", method = RequestMethod.GET)

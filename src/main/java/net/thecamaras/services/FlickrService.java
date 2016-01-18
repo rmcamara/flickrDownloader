@@ -71,14 +71,15 @@ public class FlickrService {
         }
     }
 
-    public Photo getPhoto(String photoId) {
+    public com.flickr4java.flickr.photos.Photo getPhoto(String photoId) {
         PhotosInterface photosInterface = flickr.getPhotosInterface();
         try {
             com.flickr4java.flickr.photos.Photo photo = photosInterface.getPhoto(photoId);
-            Photo result = new Photo(photo);
-            return result;
+            return photo;
         } catch (FlickrException e) {
-            e.printStackTrace();
+            String msg = String.format("Error getting photo (%s). Caused by: %s-%s", photoId, e.getErrorCode(), e.getErrorMessage());
+            logger.error(String.format(msg));
+            logger.debug(msg, e);
         }
         return null;
     }
@@ -133,6 +134,7 @@ public class FlickrService {
         }
 
         try {
+            params.setMedia("photos");
             return photosInterface.search(params, pageSize, page);
         } catch (FlickrException e) {
             String msg = String.format("Error getting user (%s, %d). Caused by: %s-%s", userId, page, e.getErrorCode(), e.getErrorMessage());

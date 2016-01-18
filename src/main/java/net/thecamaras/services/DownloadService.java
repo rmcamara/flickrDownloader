@@ -84,9 +84,22 @@ public class DownloadService {
         return newFileName;
     }
 
-    public String downloadPhoto(String pictureId) {
+    public boolean downloadPhoto(String pictureId, boolean useCommon) {
+        flickrService.doAuthenticate();
+        com.flickr4java.flickr.photos.Photo photo = flickrService.getPhoto(pictureId);
+        if (photo == null){
+            return false;
+        }
 
-        return "";
+        User user = getUser(photo.getOwner().getId());
+        if (user == null){
+            return false;
+        }
+        File destination = getDestination(user, !useCommon);
+        if (destination == null) {
+            destination = new File(downloadRoot, "Single_Images");
+        }
+        return writeImage(photo, user, destination);
     }
 
     public int downloadPhotoset(String photoSetId){
@@ -287,9 +300,9 @@ public class DownloadService {
             photoRecord.setFileLocation(downloadRoot.toURI().relativize(newFile.toURI()).getPath());
             photoRepository.save(photoRecord);
         } catch (MalformedURLException e) {
-            logger.error("Error creating downloading photo" + photo.getId(), e);
+            logger.error("Error creating download photo" + photo.getId(), e);
         } catch (IOException e) {
-            logger.error("Error creating downloading photo" + photo.getId(), e);
+            logger.error("Error creating download photo" + photo.getId(), e);
         }
         return true;
     }
@@ -328,9 +341,13 @@ public class DownloadService {
         return user;
     }
 
-    protected File getDestination(User user) {
+    protected File getDestination(User user, boolean createIfMissing) {
         File destination = new File(downloadRoot, getValidFileName(user.getUsername()));
         if (!destination.exists()) {
+            if (!createIfMissing) {
+                return null;
+            }
+
             destination.mkdirs();
             try {
                 File userFile = new File(destination, user.getFlickrId());
@@ -343,5 +360,9 @@ public class DownloadService {
             }
         }
         return destination;
+    }
+
+    protected File getDestination(User user){
+        return getDestination(user, true);
     }
 }
