@@ -5,6 +5,8 @@ import org.springframework.data.repository.CrudRepository;
 
 import net.thecamaras.domain.User;
 
+import java.util.List;
+
 /**
  * Created by qsz922 on 2016/01/13.
  */
@@ -13,5 +15,7 @@ public interface UserRepository extends CrudRepository<User, Integer> {
     Long getUsercount();
 
     User getFirstByFlickrId(String flickrId);
+
+    List<User> findByFlickrIdIsNull();
 
 }

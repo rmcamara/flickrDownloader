@@ -16,7 +16,7 @@ public class Photo {
 
     private String ownerId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String flickrId;
     private Date datePosted;
     private Date dateDownloaded;

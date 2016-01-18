@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -121,6 +123,31 @@ public class ImportService {
             }
         }
         logger.info("Users auto download information updated: " + usersUpdated);
+    }
+
+    @Transactional
+    public void fixUsers(){
+        List<User> users = userRepository.findByFlickrIdIsNull();
+        for (User user : users){
+            File userDir = new File(downloadRoot, user.getUsername());
+            if (!userDir.exists()){
+                logger.warn("Error loading directory: " + userDir.toString());
+                continue;
+            }
+
+            for (File file : userDir.listFiles()) {
+                String userId = file.getName();
+                Matcher matcher = idLookup.matcher(userId);
+                if (matcher.find()) {
+                    logger.info(String.format("User found %s", userId));
+                    user.setFlickrId(userId);
+                    int photos = photoRepository.updateUserFiles(userId, user.getUsername());
+                    logger.info("Photos updated: " + photos);
+                    continue;
+                }
+            }
+        }
+
     }
 
     private int searchDirectory(File root) {

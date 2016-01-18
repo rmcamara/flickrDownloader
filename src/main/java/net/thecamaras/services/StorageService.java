@@ -72,7 +72,7 @@ public class StorageService {
         int filesDeleted = 0;
         int pageNum = 0;
         PageRequest pageRequest = new PageRequest(pageNum, PAGE_SIZE);
-        Page<Photo> page = photoRepository.findByFlagRemoval(true, pageRequest);
+        Page<Photo> page = photoRepository.findByFlagRemovalTrue(pageRequest);
         do{
             for (Photo photo : page.getContent()){
                 try{
@@ -92,7 +92,7 @@ public class StorageService {
             }
 
             pageRequest = new PageRequest(++pageNum, PAGE_SIZE);
-            page = photoRepository.findByFlagRemoval(true, pageRequest);
+            page = photoRepository.findByFlagRemovalTrue(pageRequest);
         }
         while(pageNum <= page.getTotalPages());
 

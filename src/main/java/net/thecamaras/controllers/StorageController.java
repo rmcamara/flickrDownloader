@@ -30,6 +30,11 @@ public class StorageController {
         return importService.loadUsers();
     }
 
+    @RequestMapping(value = "/fixUsers", method = RequestMethod.GET)
+    public void fixUsers(){
+        importService.fixUsers();
+    }
+
     @RequestMapping(value = "/readAutoFile", method = RequestMethod.GET)
     public void loadAutoDownload(){
         importService.loadAutoDownload();

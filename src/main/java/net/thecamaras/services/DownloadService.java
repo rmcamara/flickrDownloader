@@ -169,6 +169,7 @@ public class DownloadService {
             String filename = dateParser.format(photo.getDatePosted()) + " " + photo.getTitle() + " (" + photo.getId() + ")";
             if (photoRepository.getFirstByFlickrId(photo.getId()) != null) {
                 logger.debug("Already exists: " + filename);
+                return false;
             }
             filename = getValidFileName(filename);
             File newFile = new File(destination, filename + ".jpg");
