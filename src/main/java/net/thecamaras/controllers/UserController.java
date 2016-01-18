@@ -32,21 +32,21 @@ public class UserController {
         return userService.addUser(flickrId);
     }
 
-    @RequestMapping(value = "/{flickrId}/ignoreSize/{value}", method = RequestMethod.GET)
-    public User setIgnoreSize(@PathVariable String flickrId, @PathVariable Boolean ignoreSize) {
+    @RequestMapping(value = "/{flickrId}/ignoreSize/{ignoreSize}", method = RequestMethod.GET)
+    public User setIgnoreSize(@PathVariable String flickrId, @PathVariable boolean ignoreSize) {
         User user = getUser(flickrId);
         user.setIgnoreSizeCheck(ignoreSize);
         return userService.save(user);
     }
 
-    @RequestMapping(value = "/{flickrId}/autoDownload/{value}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{flickrId}/autoDownload/{autoDownload}", method = RequestMethod.GET)
     public User setAutoDownload(@PathVariable String flickrId, @PathVariable boolean autoDownload) {
         User user = getUser(flickrId);
         user.setAutoDownload(autoDownload);
         return userService.save(user);
     }
 
-    @RequestMapping(value = "/{flickrId}/autoGroup/{value}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{flickrId}/autoGroup/{autoDownloadGroup}", method = RequestMethod.GET)
     public User setAutoDownloadGroup(@PathVariable String flickrId, @PathVariable boolean autoDownloadGroup) {
         User user = getUser(flickrId);
         user.setAutoDownloadGroup(autoDownloadGroup);
