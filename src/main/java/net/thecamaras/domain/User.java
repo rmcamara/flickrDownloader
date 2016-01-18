@@ -70,30 +70,6 @@ public class User {
         this.username = username;
     }
 
-    public Boolean getAutoDownload() {
-        return autoDownload;
-    }
-
-    public void setAutoDownload(Boolean autoDownload) {
-        this.autoDownload = autoDownload;
-    }
-
-    public Boolean getAutoDownloadGroup() {
-        return autoDownloadGroup;
-    }
-
-    public void setAutoDownloadGroup(Boolean autoDownloadGroup) {
-        this.autoDownloadGroup = autoDownloadGroup;
-    }
-
-    public Boolean getIgnoreSizeCheck() {
-        return ignoreSizeCheck;
-    }
-
-    public void setIgnoreSizeCheck(Boolean ignoreSizeCheck) {
-        this.ignoreSizeCheck = ignoreSizeCheck;
-    }
-
     public boolean isAutoDownload() {
         return autoDownload;
     }
