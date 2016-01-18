@@ -16,7 +16,6 @@ import com.flickr4java.flickr.photos.Size;
 import net.thecamaras.domain.Photo;
 import net.thecamaras.domain.SystemConfig;
 import net.thecamaras.domain.User;
-
 import org.scribe.model.Token;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +25,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -62,7 +61,7 @@ public class FlickrService {
         }
     }
 
-    public void doAuthenticate(){
+    public void doAuthenticate() {
         try {
             AuthInterface authInterface = flickr.getAuthInterface();
             Auth token = authInterface.checkToken(new Token(systemService.getProperty(SystemConfig.TOKEN), systemService.getProperty(SystemConfig.TOKEN_SECRET)));
@@ -86,8 +85,7 @@ public class FlickrService {
     }
 
 
-
-    public User getUserFromPhotoId(String photoId){
+    public User getUserFromPhotoId(String photoId) {
         PhotosInterface photosInterface = flickr.getPhotosInterface();
         try {
             com.flickr4java.flickr.photos.Photo photo = photosInterface.getPhoto(photoId);
@@ -121,12 +119,19 @@ public class FlickrService {
         return null;
     }
 
-    public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotos(String userId, int page, int pageSize){
+    public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotos(String userId, int page, int pageSize) {
+        return getUserPhotos(userId, null, page, pageSize);
+    }
+
+    public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotos(String userId, Date minDate, int page, int pageSize) {
         PhotosInterface photosInterface = flickr.getPhotosInterface();
         SearchParameters params = new SearchParameters();
         params.setUserId(userId);
         params.setSafeSearch(Flickr.SAFETYLEVEL_RESTRICTED);
         params.setExtras(getExtras());
+        if (minDate != null) {
+            params.setMinUploadDate(minDate);
+        }
 
         try {
             return photosInterface.search(params, pageSize, page);
@@ -138,7 +143,7 @@ public class FlickrService {
         return null;
     }
 
-    public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotosInGroup(String groupId, String userId, int page, int pageSize){
+    public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotosInGroup(String groupId, String userId, int page, int pageSize) {
         PoolsInterface poolsInterface = flickr.getPoolsInterface();
         try {
             return poolsInterface.getPhotos(groupId, userId, null, getExtras(), pageSize, page);
@@ -150,19 +155,19 @@ public class FlickrService {
         return null;
     }
 
-    public Collection<Group> getMyGroups(){
+    public Collection<Group> getMyGroups() {
         PoolsInterface poolsInterface = flickr.getPoolsInterface();
         try {
             return poolsInterface.getGroups();
         } catch (FlickrException e) {
-            String msg = String.format("Error getting my groups. Caused by: %s-%s",e.getErrorCode(), e.getErrorMessage());
+            String msg = String.format("Error getting my groups. Caused by: %s-%s", e.getErrorCode(), e.getErrorMessage());
             logger.error(String.format(msg));
             logger.debug(msg, e);
         }
         return null;
     }
 
-    public Size getBestPhoto(String photoId){
+    public Size getBestPhoto(String photoId) {
         PhotosInterface photosInterface = flickr.getPhotosInterface();
 
         try {

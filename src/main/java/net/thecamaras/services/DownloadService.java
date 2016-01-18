@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by rcamara on 1/14/2016.
@@ -47,6 +50,7 @@ public class DownloadService {
 
     private File downloadRoot;
     private int maxDownload;
+    private int maxDays;
     private FastDateFormat dateParser;
 
     @PostConstruct
@@ -64,6 +68,7 @@ public class DownloadService {
             }
         }
         maxDownload = systemService.getIntegerProperty(SystemConfig.MAX_DOWNLOAD);
+        maxDays = systemService.getIntegerProperty(SystemConfig.AUTO_MAX_DAY);
         dateParser = FastDateFormat.getInstance("yyMMdd-HHmmss");
     }
 
@@ -110,7 +115,7 @@ public class DownloadService {
         return downloadCount;
     }
 
-    public int downloadUserByGroup(String userId, String groupId){
+    public int downloadUserByGroup(String userId, String groupId) {
         logger.info("Downloading photos for: " + userId + " in " + groupId);
         flickrService.doAuthenticate();
 
@@ -125,7 +130,7 @@ public class DownloadService {
         return downloadCount;
     }
 
-    public int downloadUserAllGroups(String userId){
+    public int downloadUserAllGroups(String userId) {
         logger.info("Downloading photos for all groups: " + userId);
         flickrService.doAuthenticate();
 
@@ -145,7 +150,45 @@ public class DownloadService {
         return downloadCount;
     }
 
-    private int downloadUserByGroup(User user, File destination, String groupId){
+    public int downloadAllUsersRecent() {
+        logger.info("*****Downloading photos for all recent user photos*****");
+        flickrService.doAuthenticate();
+
+        Calendar calendar = Calendar.getInstance(); // this would default to now
+        calendar.add(Calendar.DAY_OF_MONTH, -maxDays);
+        Date minUploadDate = calendar.getTime();
+
+        List<User> users = userRepository.findByAutoDownloadTrueAndInactiveFalse();
+        int totalDownloads = 0;
+
+        for (User user : users) {
+            User updatedUser = getUser(user.getFlickrId());
+            if (updatedUser == null) {
+                continue;
+            }
+            File destination = getDestination(updatedUser);
+
+            PhotoList<com.flickr4java.flickr.photos.Photo> photoList = new PhotoList<>();
+            int downloadCount = 0;
+            do {
+                photoList = flickrService.getUserPhotos(updatedUser.getFlickrId(), minUploadDate, photoList.getPage() + 1, USER_PAGE_SIZE);
+
+                for (int i = 0; i < photoList.size(); i++) {
+                    com.flickr4java.flickr.photos.Photo photo = photoList.get(i);
+                    if (writeImage(photo, user, destination)) {
+                        downloadCount++;
+                    }
+                }
+            } while (photoList.getPage() < photoList.getPages());
+            logger.info(String.format("Downloaded %d for %s", downloadCount, updatedUser.getUsername()));
+            totalDownloads += downloadCount;
+        }
+
+        logger.info("Downloaded photos for all users: " + totalDownloads);
+        return totalDownloads;
+    }
+
+    private int downloadUserByGroup(User user, File destination, String groupId) {
         int downloadCount = 0;
         PhotoList<com.flickr4java.flickr.photos.Photo> photoList = new PhotoList<>();
         do {
@@ -161,7 +204,7 @@ public class DownloadService {
             }
             downloadCount += photoList.getPerPage();
         } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
-        return  downloadCount;
+        return downloadCount;
     }
 
     private boolean writeImage(com.flickr4java.flickr.photos.Photo photo, User user, File destination) {
