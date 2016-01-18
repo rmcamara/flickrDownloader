@@ -28,6 +28,11 @@ public class DownloadController {
         return downloadService.downloadUser(id);
     }
 
+    @RequestMapping(value = "/photoset/{id}", method = RequestMethod.GET)
+    public int downloadPhotoset(@PathVariable String id) {
+        return downloadService.downloadPhotoset(id);
+    }
+
     @RequestMapping(value = "/group/{grouId}/user/{userId}", method = RequestMethod.GET)
     public int downloadUser(@PathVariable String grouId, @PathVariable String userId) {
         return downloadService.downloadUserByGroup(userId, grouId);

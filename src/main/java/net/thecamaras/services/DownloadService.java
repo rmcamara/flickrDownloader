@@ -3,6 +3,7 @@ package net.thecamaras.services;
 import com.flickr4java.flickr.groups.Group;
 import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.Size;
+import com.flickr4java.flickr.photosets.Photoset;
 import net.thecamaras.domain.Photo;
 import net.thecamaras.domain.SystemConfig;
 import net.thecamaras.domain.User;
@@ -88,6 +89,38 @@ public class DownloadService {
         return "";
     }
 
+    public int downloadPhotoset(String photoSetId){
+        logger.info("Downloading photos for: " + photoSetId);
+        flickrService.doAuthenticate();
+
+        Photoset photset = flickrService.getPhotoSet(photoSetId);
+        User user = getUser(photset.getOwner().getId());
+        if (user == null){
+            return 0;
+        }
+
+        File destination = getDestination(user);
+
+        PhotoList<com.flickr4java.flickr.photos.Photo> photoList = new PhotoList<>();
+        int downloadCount = 0;
+        int downloaded = 0;
+        do {
+            photoList = flickrService.getPhotoSetPhotos(photoSetId, photoList.getPage() + 1, USER_PAGE_SIZE);
+
+            for (int i = 0; i < photoList.size(); i++) {
+                com.flickr4java.flickr.photos.Photo photo = photoList.get(i);
+                if (writeImage(photo, user, destination)){
+                    downloaded++;
+                }
+            }
+            downloadCount += photoList.getPerPage();
+
+        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
+
+        logger.info(String.format("Downloaded %d for %s", downloaded, photset.getTitle()));
+        return downloaded;
+    }
+
     public int downloadUser(String userId) {
         logger.info("Downloading photos for: " + userId);
         flickrService.doAuthenticate();
@@ -100,19 +133,22 @@ public class DownloadService {
 
         PhotoList<com.flickr4java.flickr.photos.Photo> photoList = new PhotoList<>();
         int downloadCount = 0;
+        int downloaded = 0;
         do {
             photoList = flickrService.getUserPhotos(userId, photoList.getPage() + 1, USER_PAGE_SIZE);
 
             for (int i = 0; i < photoList.size(); i++) {
                 com.flickr4java.flickr.photos.Photo photo = photoList.get(i);
-                writeImage(photo, user, destination);
+                if (writeImage(photo, user, destination)){
+                    downloaded++;
+                }
             }
             downloadCount += photoList.getPerPage();
 
         } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
 
-        logger.info("Downloaded photos for: " + userId);
-        return downloadCount;
+        logger.info(String.format("Downloaded %d for %s", downloaded, user.getUsername()));
+        return downloaded;
     }
 
     public int downloadUserByGroup(String userId, String groupId) {
@@ -126,7 +162,7 @@ public class DownloadService {
         File destination = getDestination(user);
         int downloadCount = downloadUserByGroup(user, destination, groupId);
 
-        logger.info("Downloaded photos for: " + userId);
+        logger.info(String.format("Downloaded %d for %s", downloadCount, user.getUsername()));
         return downloadCount;
     }
 
@@ -143,10 +179,10 @@ public class DownloadService {
         int downloadCount = 0;
         for (Group group : groupList) {
             logger.info("Downloading from " + group.getName());
-            downloadCount = downloadUserByGroup(user, destination, group.getId());
+            downloadCount += downloadUserByGroup(user, destination, group.getId());
         }
 
-        logger.info("Downloaded photos for: " + userId);
+        logger.info(String.format("Downloaded %d for %s", downloadCount, user.getUsername()));
         return downloadCount;
     }
 
@@ -190,6 +226,7 @@ public class DownloadService {
 
     private int downloadUserByGroup(User user, File destination, String groupId) {
         int downloadCount = 0;
+        int downloaded = 0;
         PhotoList<com.flickr4java.flickr.photos.Photo> photoList = new PhotoList<>();
         do {
             photoList = flickrService.getUserPhotosInGroup(groupId, user.getFlickrId(), photoList.getPage() + 1, USER_PAGE_SIZE);
@@ -200,11 +237,13 @@ public class DownloadService {
 
             for (int i = 0; i < photoList.size(); i++) {
                 com.flickr4java.flickr.photos.Photo photo = photoList.get(i);
-                writeImage(photo, user, destination);
+                if (writeImage(photo, user, destination)){
+                    downloaded++;
+                }
             }
             downloadCount += photoList.getPerPage();
         } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
-        return downloadCount;
+        return downloaded;
     }
 
     private boolean writeImage(com.flickr4java.flickr.photos.Photo photo, User user, File destination) {

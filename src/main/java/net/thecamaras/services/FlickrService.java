@@ -9,10 +9,9 @@ import com.flickr4java.flickr.auth.AuthInterface;
 import com.flickr4java.flickr.groups.Group;
 import com.flickr4java.flickr.groups.pools.PoolsInterface;
 import com.flickr4java.flickr.people.PeopleInterface;
-import com.flickr4java.flickr.photos.PhotoList;
-import com.flickr4java.flickr.photos.PhotosInterface;
-import com.flickr4java.flickr.photos.SearchParameters;
-import com.flickr4java.flickr.photos.Size;
+import com.flickr4java.flickr.photos.*;
+import com.flickr4java.flickr.photosets.Photoset;
+import com.flickr4java.flickr.photosets.PhotosetsInterface;
 import net.thecamaras.domain.Photo;
 import net.thecamaras.domain.SystemConfig;
 import net.thecamaras.domain.User;
@@ -161,6 +160,31 @@ public class FlickrService {
             return poolsInterface.getGroups();
         } catch (FlickrException e) {
             String msg = String.format("Error getting my groups. Caused by: %s-%s", e.getErrorCode(), e.getErrorMessage());
+            logger.error(String.format(msg));
+            logger.debug(msg, e);
+        }
+        return null;
+    }
+
+    public Photoset getPhotoSet(String photoSetId){
+        PhotosetsInterface photosetsInterface = flickr.getPhotosetsInterface();
+
+        try {
+            return photosetsInterface.getInfo(photoSetId);
+        } catch (FlickrException e) {
+            String msg = String.format("Error getting photoset info. Caused by: %s-%s", e.getErrorCode(), e.getErrorMessage());
+            logger.error(String.format(msg));
+            logger.debug(msg, e);
+        }
+        return null;
+    }
+
+    public PhotoList<com.flickr4java.flickr.photos.Photo> getPhotoSetPhotos(String photoSetId, int page, int pageSize) {
+        PhotosetsInterface photosetsInterface = flickr.getPhotosetsInterface();
+        try {
+            return photosetsInterface.getPhotos(photoSetId, getExtras(), Flickr.PRIVACY_LEVEL_FRIENDS_FAMILY, pageSize, page);
+        } catch (FlickrException e) {
+            String msg = String.format("Error getting photoset (%s, %d). Caused by: %s-%s", photoSetId, page, e.getErrorCode(), e.getErrorMessage());
             logger.error(String.format(msg));
             logger.debug(msg, e);
         }
