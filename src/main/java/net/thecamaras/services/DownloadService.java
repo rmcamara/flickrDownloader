@@ -127,7 +127,7 @@ public class DownloadService {
                 if (writeImage(photo, user, destination)) {
                     downloaded++;
                 }
-                if (!state.active){
+                if (!state.active || downloaded > maxDownload){
                     break;
                 }
             }
@@ -161,7 +161,7 @@ public class DownloadService {
                     downloaded++;
                 }
 
-                if (!state.active){
+                if (!state.active || downloaded > maxDownload){
                     break;
                 }
             }
@@ -265,7 +265,7 @@ public class DownloadService {
                 if (writeImage(photo, user, destination)) {
                     downloaded++;
                 }
-                if(!state.active){
+                if(!state.active || downloaded > maxDownload){
                     break;
                 }
             }
