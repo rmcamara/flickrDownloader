@@ -5,6 +5,7 @@ import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.Size;
 import com.flickr4java.flickr.photosets.Photoset;
 import net.thecamaras.domain.Photo;
+import net.thecamaras.domain.State;
 import net.thecamaras.domain.SystemConfig;
 import net.thecamaras.domain.User;
 import net.thecamaras.repository.PhotoRepository;
@@ -48,6 +49,9 @@ public class DownloadService {
 
     @Autowired
     private PhotoRepository photoRepository;
+
+    @Autowired
+    private State state;
 
     private File downloadRoot;
     private int maxDays;
@@ -123,10 +127,13 @@ public class DownloadService {
                 if (writeImage(photo, user, destination)) {
                     downloaded++;
                 }
+                if (!state.active){
+                    break;
+                }
             }
             downloadCount += photoList.getPerPage();
 
-        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
+        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload && state.active);
 
         logger.info(String.format("Downloaded %d for %s", downloaded, photset.getTitle()));
         return downloaded;
@@ -153,10 +160,14 @@ public class DownloadService {
                 if (writeImage(photo, user, destination)) {
                     downloaded++;
                 }
+
+                if (!state.active){
+                    break;
+                }
             }
             downloadCount += photoList.getPerPage();
 
-        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
+        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload && state.active);
 
         logger.info(String.format("Downloaded %d for %s", downloaded, user.getUsername()));
         return downloaded;
@@ -254,9 +265,12 @@ public class DownloadService {
                 if (writeImage(photo, user, destination)) {
                     downloaded++;
                 }
+                if(!state.active){
+                    break;
+                }
             }
             downloadCount += photoList.getPerPage();
-        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload);
+        } while (photoList.getPage() < photoList.getPages() && downloadCount < maxDownload && state.active);
         return downloaded;
     }
 
