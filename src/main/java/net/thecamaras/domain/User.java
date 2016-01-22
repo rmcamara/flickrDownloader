@@ -1,6 +1,7 @@
 package net.thecamaras.domain;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,6 +22,7 @@ public class User {
     private boolean autoDownloadGroup;
     private boolean ignoreSizeCheck;
     private boolean inactive;
+    private Date lastSeen;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<UsernameHisotry> previousNames;
@@ -108,5 +110,13 @@ public class User {
 
     public void setPreviousNames(Set<UsernameHisotry> previousNames) {
         this.previousNames = previousNames;
+    }
+
+    public Date getLastSeen() {
+        return lastSeen;
+    }
+
+    public void setLastSeen(Date lastSeen) {
+        this.lastSeen = lastSeen;
     }
 }

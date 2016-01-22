@@ -329,9 +329,13 @@ public class DownloadService {
      * @return
      */
     private User getUser(String userId) {
-        User fUser = flickrService.getUser(userId);
         User user = userRepository.getFirstByFlickrId(userId);
+        if (user != null && inLastDay(user.getLastSeen())){
+            logger.debug("seen in last month so skip checking");
+            return user;
+        }
 
+        User fUser = flickrService.getUser(userId);
         if (fUser == null) {
             if (user != null && !user.isInactive()) {
                 logger.warn("User being marked inactive");
@@ -344,15 +348,22 @@ public class DownloadService {
         if (user == null) {
             logger.debug("New user found");
             user = fUser;
-            userRepository.save(user);
         }
 
         if (!user.getUsername().equals(fUser.getUsername())) {
-            // TODO update the directory location
+            File currentLocation = new File(downloadRoot, getValidFileName(user.getUsername()));
+            File newLocation = new File(downloadRoot, getValidFileName(fUser.getUsername()));
+            boolean renamed = currentLocation.renameTo(newLocation);
+            if (!renamed){
+                logger.error(String.format("Problem renaming directory %s to %s", currentLocation.getName(), newLocation.getName()));
+            }
+            logger.warn(String.format("Renamed %s to %s", currentLocation.getName(), newLocation.getName()));
             user.setUsername(fUser.getUsername());
             user.addUsername(fUser.getUsername());
-            userRepository.save(user);
         }
+
+        user.setLastSeen(new Date());
+        userRepository.save(user);
         return user;
     }
 
@@ -379,5 +390,13 @@ public class DownloadService {
 
     protected File getDestination(User user) {
         return getDestination(user, true);
+    }
+
+    static final long DAY = 24 * 60 * 60 * 1000;
+    private boolean inLastDay(Date aDate) {
+        if (aDate == null){
+            return false;
+        }
+        return aDate.getTime() > System.currentTimeMillis() - DAY;
     }
 }
