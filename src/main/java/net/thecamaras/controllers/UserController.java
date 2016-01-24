@@ -39,6 +39,14 @@ public class UserController {
         return userService.save(user);
     }
 
+    @RequestMapping(value = "/{flickrId}/auto/{autoDownload}", method = RequestMethod.GET)
+    public User setAuto(@PathVariable String flickrId, @PathVariable boolean autoDownload) {
+        User user = getUser(flickrId);
+        user.setAutoDownload(autoDownload);
+        user.setAutoDownloadGroup(autoDownload);
+        return userService.save(user);
+    }
+
     @RequestMapping(value = "/{flickrId}/autoDownload/{autoDownload}", method = RequestMethod.GET)
     public User setAutoDownload(@PathVariable String flickrId, @PathVariable boolean autoDownload) {
         User user = getUser(flickrId);
