@@ -24,38 +24,32 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by rcamara on 1/14/2016.
  */
 @Service
 public class DownloadService {
+    static final long DAY = 24 * 60 * 60 * 1000;
     private static final int USER_PAGE_SIZE = 1000;
-
     private Logger logger = LoggerFactory.getLogger(DownloadService.class);
-
     @Autowired
     private SystemService systemService;
-
     @Autowired
     private FlickrService flickrService;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private PhotoRepository photoRepository;
-
     @Autowired
     private State state;
-
     private File downloadRoot;
     private int maxDays;
     private FastDateFormat dateParser;
+
+    {
+    }
 
     @PostConstruct
     public void init() {
@@ -127,7 +121,7 @@ public class DownloadService {
                 if (writeImage(photo, user, destination)) {
                     downloaded++;
                 }
-                if (!state.active || downloaded > maxDownload){
+                if (!state.active || downloaded > maxDownload) {
                     break;
                 }
             }
@@ -161,7 +155,7 @@ public class DownloadService {
                     downloaded++;
                 }
 
-                if (!state.active || downloaded > maxDownload){
+                if (!state.active || downloaded > maxDownload) {
                     break;
                 }
             }
@@ -202,7 +196,7 @@ public class DownloadService {
         for (Group group : groupList) {
             logger.info("Downloading from " + group.getName());
             downloadCount += downloadUserByGroup(user, destination, group.getId(), maxDownload);
-            if (downloadCount > maxDownload){
+            if (downloadCount > maxDownload) {
                 break;
             }
         }
@@ -249,6 +243,56 @@ public class DownloadService {
         return totalDownloads;
     }
 
+    public int downloadAllUsersInGroups() {
+        logger.info("*****Downloading photos for all user photos from groups*****");
+        flickrService.doAuthenticate();
+
+        Calendar calendar = Calendar.getInstance(); // this would default to now
+        calendar.add(Calendar.DAY_OF_MONTH, -60);
+        Date minUploadDate = calendar.getTime();
+
+        List<User> users = userRepository.findByAutoDownloadGroupTrueAndInactiveFalse();
+        HashMap<String, User> userMap = new HashMap<>();
+
+        for (User user : users) {
+            userMap.put(user.getFlickrId(), user);
+        }
+
+        int totalDownloads = 0;
+        Collection<Group> groups = flickrService.getMyGroups();
+        for (Group group : groups) {
+            PhotoList<com.flickr4java.flickr.photos.Photo> photoList = new PhotoList<>();
+            int downloadCount = 0;
+            do {
+                photoList = flickrService.getUserPhotosInGroup(group.getId(), null, photoList.getPage() + 1, USER_PAGE_SIZE);
+                for (com.flickr4java.flickr.photos.Photo photo : photoList) {
+                    User user = userMap.get(photo.getOwner().getId());
+                    if (user != null) {
+                        File destination = getDestination(user, false);
+                        if (destination == null) {
+                            logger.error("User destination can not be computed: " + user.getUsername());
+                            continue;
+                        }
+                        if (writeImage(photo, user, destination)) {
+                            downloadCount++;
+                        }
+                    }
+                    if (!state.active) {
+                        break;
+                    }
+                }
+            }
+            while (photoList.getPage() < photoList.getPages() && photoList.get(photoList.size() - 1).getDateAdded().after(minUploadDate) && state.active);
+            logger.info(String.format("Downloaded %d for %s", downloadCount, group.getName()));
+            totalDownloads += downloadCount;
+            if (!state.active) {
+                break;
+            }
+        }
+        logger.info("Downloaded photos for all users: " + totalDownloads);
+        return totalDownloads;
+    }
+
     private int downloadUserByGroup(User user, File destination, String groupId, int maxDownload) {
         int downloadCount = 0;
         int downloaded = 0;
@@ -265,7 +309,7 @@ public class DownloadService {
                 if (writeImage(photo, user, destination)) {
                     downloaded++;
                 }
-                if(!state.active || downloaded > maxDownload){
+                if (!state.active || downloaded > maxDownload) {
                     break;
                 }
             }
@@ -330,7 +374,7 @@ public class DownloadService {
      */
     private User getUser(String userId) {
         User user = userRepository.getFirstByFlickrId(userId);
-        if (user != null && inLastDay(user.getLastSeen())){
+        if (user != null && inLastDay(user.getLastSeen())) {
             logger.debug("seen in last month so skip checking");
             return user;
         }
@@ -354,7 +398,7 @@ public class DownloadService {
             File currentLocation = new File(downloadRoot, getValidFileName(user.getUsername()));
             File newLocation = new File(downloadRoot, getValidFileName(fUser.getUsername()));
             boolean renamed = currentLocation.renameTo(newLocation);
-            if (!renamed){
+            if (!renamed) {
                 logger.error(String.format("Problem renaming directory %s to %s", currentLocation.getName(), newLocation.getName()));
             }
             logger.warn(String.format("Renamed %s to %s", currentLocation.getName(), newLocation.getName()));
@@ -392,9 +436,8 @@ public class DownloadService {
         return getDestination(user, true);
     }
 
-    static final long DAY = 24 * 60 * 60 * 1000;
     private boolean inLastDay(Date aDate) {
-        if (aDate == null){
+        if (aDate == null) {
             return false;
         }
         return aDate.getTime() > System.currentTimeMillis() - DAY;

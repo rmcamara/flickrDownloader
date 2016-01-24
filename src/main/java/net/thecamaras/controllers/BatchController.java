@@ -38,7 +38,7 @@ public class BatchController {
 
     @RequestMapping(value = "/groups", method = RequestMethod.GET)
     public int downloadUser() {
-        return downloadService.downloadAllUsersRecent();
+        return downloadService.downloadAllUsersInGroups();
     }
 
     @RequestMapping(value = "/groups/list", method = RequestMethod.GET)
