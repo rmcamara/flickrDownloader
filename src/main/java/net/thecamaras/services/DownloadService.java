@@ -77,6 +77,10 @@ public class DownloadService {
         newFileName = newFileName.replaceAll("[^\\p{Print}]", "").trim();
         if (newFileName.length() == 0)
             throw new IllegalStateException("File Name " + fileName + " results in a empty fileName!");
+        if (newFileName.length() > 250){
+            logger.warn("Filename length exceeds max 250 characters: " + newFileName);
+            newFileName = newFileName.substring(0, 250);
+        }
         return newFileName;
     }
 

@@ -107,6 +107,9 @@ public class Photo {
     }
 
     public void setDescription(String description) {
+        if (description != null && description.length() > 2024){
+            description = description.substring(0, 2023);
+        }
         this.description = description;
     }
 

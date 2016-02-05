@@ -137,11 +137,11 @@ public class FlickrService {
             params.setMedia("photos");
             return photosInterface.search(params, pageSize, page);
         } catch (FlickrException e) {
-            String msg = String.format("Error getting user (%s, %d). Caused by: %s-%s", userId, page, e.getErrorCode(), e.getErrorMessage());
+            String msg = String.format("Error getting user photo (%s, %d). Caused by: %s-%s", userId, page, e.getErrorCode(), e.getErrorMessage());
             logger.error(String.format(msg));
             logger.debug(msg, e);
         }
-        return null;
+        return new PhotoList<>();
     }
 
     public PhotoList<com.flickr4java.flickr.photos.Photo> getUserPhotosInGroup(String groupId, String userId, int page, int pageSize) {
