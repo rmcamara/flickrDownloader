@@ -134,7 +134,6 @@ public class FlickrService {
         }
 
         try {
-            params.setMedia("photos");
             return photosInterface.search(params, pageSize, page);
         } catch (FlickrException e) {
             String msg = String.format("Error getting user photo (%s, %d). Caused by: %s-%s", userId, page, e.getErrorCode(), e.getErrorMessage());

@@ -1,15 +1,14 @@
 package net.thecamaras.services;
 
 import com.flickr4java.flickr.groups.Group;
+import com.flickr4java.flickr.photos.Media;
 import com.flickr4java.flickr.photos.PhotoList;
 import com.flickr4java.flickr.photos.Size;
 import com.flickr4java.flickr.photosets.Photoset;
-import net.thecamaras.domain.Photo;
-import net.thecamaras.domain.State;
-import net.thecamaras.domain.SystemConfig;
-import net.thecamaras.domain.User;
+import net.thecamaras.domain.*;
 import net.thecamaras.repository.PhotoRepository;
 import net.thecamaras.repository.UserRepository;
+import net.thecamaras.repository.VideoRepository;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +42,13 @@ public class DownloadService {
     @Autowired
     private PhotoRepository photoRepository;
     @Autowired
+    private VideoRepository videoRepository;
+
+    @Autowired
     private State state;
     private File downloadRoot;
     private int maxDays;
     private FastDateFormat dateParser;
-
-    {
-    }
 
     @PostConstruct
     public void init() {
@@ -337,6 +336,16 @@ public class DownloadService {
             }
 
             Size size = flickrService.getBestPhoto(photo.getId());
+            if (size.getMedia() == Media.video){
+                logger.info("Found Video " + filename + " to " + size.getSource());
+                if (videoRepository.getFirstByFlickrId(photo.getId()) == null){
+                    Video video = new Video(photo);
+                    video.setFileLocation(size.getSource());
+                    videoRepository.save(video);
+                }
+                return true;
+            }
+
             if (!user.isIgnoreSizeCheck() && size.getWidth() < 900 && size.getHeight() < 900) {
                 logger.debug("Too small: " + filename);
                 return false;
@@ -365,7 +374,7 @@ public class DownloadService {
         } catch (MalformedURLException e) {
             logger.error("Error creating download photo" + photo.getId(), e);
         } catch (IOException e) {
-            logger.error("Error creating download photo" + photo.getId(), e);
+            logger.error("Error creating download photo " + photo.getId(), e);
         }
         return true;
     }
