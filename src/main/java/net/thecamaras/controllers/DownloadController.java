@@ -26,20 +26,23 @@ public class DownloadController {
 
     @RequestMapping(value = "/photo/{id}", method = RequestMethod.GET)
     public boolean getPhotoDetails(@PathVariable String id,
-                                   @RequestParam(name = "useCommon", required = false, defaultValue = "true") boolean useCommon) {
-        return downloadService.downloadPhoto(id, useCommon);
+                                   @RequestParam(name = "useCommon", required = false, defaultValue = "true") boolean useCommon,
+                                   @RequestParam(name = "ignoreSize", required = false, defaultValue = "false") boolean ignoreSize) {
+        return downloadService.downloadPhoto(id, useCommon, ignoreSize);
     }
 
     @RequestMapping(value = "/user/{id}", method = RequestMethod.GET)
     public int downloadUser(@PathVariable String id,
-                            @RequestParam(name = "max", required = false) Integer maxDownload) {
-        return downloadService.downloadUser(id, getMaxDownload(maxDownload));
+                            @RequestParam(name = "max", required = false) Integer maxDownload,
+                            @RequestParam(name = "ignoreSize", required = false, defaultValue = "false") boolean ignoreSize) {
+        return downloadService.downloadUser(id, getMaxDownload(maxDownload), ignoreSize);
     }
 
     @RequestMapping(value = "/photoset/{id}", method = RequestMethod.GET)
     public int downloadPhotoset(@PathVariable String id,
-                                @RequestParam(name = "max", required = false) Integer maxDownload) {
-        return downloadService.downloadPhotoset(id, getMaxDownload(maxDownload));
+                                @RequestParam(name = "max", required = false) Integer maxDownload,
+                                @RequestParam(name = "ignoreSize", required = false, defaultValue = "false") boolean ignoreSize) {
+        return downloadService.downloadPhotoset(id, getMaxDownload(maxDownload), ignoreSize);
     }
 
     @RequestMapping(value = "/group/{grouId}/user/{userId}", method = RequestMethod.GET)

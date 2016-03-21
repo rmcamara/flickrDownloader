@@ -83,7 +83,7 @@ public class DownloadService {
         return newFileName;
     }
 
-    public boolean downloadPhoto(String pictureId, boolean useCommon) {
+    public boolean downloadPhoto(String pictureId, boolean useCommon, boolean ignoreSize) {
         flickrService.doAuthenticate();
         com.flickr4java.flickr.photos.Photo photo = flickrService.getPhoto(pictureId);
         if (photo == null) {
@@ -98,10 +98,10 @@ public class DownloadService {
         if (destination == null) {
             destination = new File(downloadRoot, "Single_Images");
         }
-        return writeImage(photo, user, destination);
+        return writeImage(photo, user, destination, ignoreSize);
     }
 
-    public int downloadPhotoset(String photoSetId, int maxDownload) {
+    public int downloadPhotoset(String photoSetId, int maxDownload, boolean ignoreSize) {
         logger.info("Downloading photos for: " + photoSetId);
         flickrService.doAuthenticate();
 
@@ -121,7 +121,7 @@ public class DownloadService {
 
             for (int i = 0; i < photoList.size(); i++) {
                 com.flickr4java.flickr.photos.Photo photo = photoList.get(i);
-                if (writeImage(photo, user, destination)) {
+                if (writeImage(photo, user, destination, ignoreSize)) {
                     downloaded++;
                 }
                 if (!state.active || downloaded > maxDownload) {
@@ -136,7 +136,7 @@ public class DownloadService {
         return downloaded;
     }
 
-    public int downloadUser(String userId, int maxDownload) {
+    public int downloadUser(String userId, int maxDownload, boolean ignoreSize) {
         logger.info("Downloading photos for: " + userId);
         flickrService.doAuthenticate();
 
@@ -154,7 +154,7 @@ public class DownloadService {
 
             for (int i = 0; i < photoList.size(); i++) {
                 com.flickr4java.flickr.photos.Photo photo = photoList.get(i);
-                if (writeImage(photo, user, destination)) {
+                if (writeImage(photo, user, destination, ignoreSize)) {
                     downloaded++;
                 }
 
@@ -322,6 +322,10 @@ public class DownloadService {
     }
 
     private boolean writeImage(com.flickr4java.flickr.photos.Photo photo, User user, File destination) {
+        return writeImage(photo, user, destination, false);
+    }
+
+    private boolean writeImage(com.flickr4java.flickr.photos.Photo photo, User user, File destination, boolean ignoreSize) {
         try {
             String filename = dateParser.format(photo.getDatePosted()) + " " + photo.getTitle() + " (" + photo.getId() + ")";
             if (photoRepository.getFirstByFlickrId(photo.getId()) != null) {
@@ -346,7 +350,7 @@ public class DownloadService {
                 return true;
             }
 
-            if (!user.isIgnoreSizeCheck() && size.getWidth() < 900 && size.getHeight() < 900) {
+            if (!(user.isIgnoreSizeCheck() || ignoreSize) && size.getWidth() < 900 && size.getHeight() < 900) {
                 logger.debug("Too small: " + filename);
                 return false;
             }
