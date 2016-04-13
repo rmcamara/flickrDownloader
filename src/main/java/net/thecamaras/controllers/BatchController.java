@@ -1,6 +1,7 @@
 package net.thecamaras.controllers;
 
 
+import io.swagger.annotations.ApiOperation;
 import net.thecamaras.domain.User;
 import net.thecamaras.services.DownloadService;
 import net.thecamaras.services.SystemService;
@@ -26,21 +27,25 @@ public class BatchController {
     @Autowired
     private UserService userService;
 
+    @ApiOperation("Display list of users who will be auto downloaded from")
     @RequestMapping(value = "/users/list", method = RequestMethod.GET)
     public List<User> listUsers() {
         return userService.getUserAutoDownload();
     }
 
+    @ApiOperation("Download new photos from users")
     @RequestMapping(value = "/users", method = RequestMethod.GET)
     public int getPhotoDetails() {
         return downloadService.downloadAllUsersRecent();
     }
 
+    @ApiOperation("Download all photos from listed users added to each group in the last X days")
     @RequestMapping(value = "/groups", method = RequestMethod.GET)
     public int downloadUser() {
         return downloadService.downloadAllUsersInGroups();
     }
 
+    @ApiOperation("List of users that are displayed by group")
     @RequestMapping(value = "/groups/list", method = RequestMethod.GET)
     public List<User> listUsersByGroup() {
         return userService.getUserAutoDownloadByGroup();

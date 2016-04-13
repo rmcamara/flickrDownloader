@@ -98,7 +98,7 @@ public class DownloadService {
         if (destination == null) {
             destination = new File(downloadRoot, "Single_Images");
         }
-        return writeImage(photo, user, destination, ignoreSize);
+        return writeImage(photo, user, destination, ignoreSize, true);
     }
 
     public int downloadPhotoset(String photoSetId, int maxDownload, boolean ignoreSize) {
@@ -326,10 +326,17 @@ public class DownloadService {
     }
 
     private boolean writeImage(com.flickr4java.flickr.photos.Photo photo, User user, File destination, boolean ignoreSize) {
+        return writeImage(photo, user, destination, ignoreSize, false);
+    }
+
+    private boolean writeImage(com.flickr4java.flickr.photos.Photo photo, User user, File destination, boolean ignoreSize, boolean verbose) {
         try {
             String filename = dateParser.format(photo.getDatePosted()) + " " + photo.getTitle() + " (" + photo.getId() + ")";
             if (photoRepository.getFirstByFlickrId(photo.getId()) != null) {
-                logger.debug("Already exists: " + filename);
+                logger.debug("Already exists in db: " + filename);
+                if (verbose){
+                    logger.info("Already exists in db: " + filename);
+                }
                 return false;
             }
             filename = getValidFileName(filename);
@@ -352,6 +359,9 @@ public class DownloadService {
 
             if (!(user.isIgnoreSizeCheck() || ignoreSize) && size.getWidth() < 900 && size.getHeight() < 900) {
                 logger.debug("Too small: " + filename);
+                if (verbose){
+                    logger.info("Too small: " + filename);
+                }
                 return false;
             }
 
