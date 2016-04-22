@@ -2,6 +2,8 @@ package net.thecamaras.controllers;
 
 import net.thecamaras.domain.SystemConfig;
 import net.thecamaras.repository.SystemRepository;
+import net.thecamaras.services.FlickrService;
+import net.thecamaras.services.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -14,24 +16,34 @@ import org.springframework.web.bind.annotation.*;
 public class SystemController {
 
     @Autowired
-    private SystemRepository systemRepository;
+    private SystemService systemService;
 
-    @RequestMapping(value = "/{name}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Autowired
+    private FlickrService flickrService;
+
+    @RequestMapping(value = "/prop/{name}", method = RequestMethod.GET, produces = {MediaType.APPLICATION_JSON_VALUE})
     public SystemConfig getSystemParameter(@PathVariable String name){
-        return systemRepository.findFirstByName(name);
+        return systemService.getParameter(name);
     }
 
-    @RequestMapping(value = "/{name}", method = RequestMethod.POST, produces = {MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/prop/{name}", method = RequestMethod.POST, produces = {MediaType.APPLICATION_JSON_VALUE})
     public SystemConfig setSystemParameter(@PathVariable String name, @RequestBody String value){
+        return systemService.setSystemParameter(name, value);
+    }
 
-        SystemConfig cfg;
-        cfg = systemRepository.findFirstByName(name);
-        if (cfg == null){
-            cfg = new SystemConfig();
-            cfg.setName(name);
-        }
-        cfg.setValue(value);
-        systemRepository.save(cfg);
-        return cfg;
+    @RequestMapping(value = "/user/", method = RequestMethod.POST)
+    public String setUserPrefix(@RequestParam(name = "name", required = false, defaultValue = "") String name){
+        return flickrService.setUserPrefix(name);
+    }
+
+    @RequestMapping(value = "/authorize", method = RequestMethod.GET)
+    public String startAuthorization(){
+        return flickrService.doPreAuthorize();
+    }
+
+    @RequestMapping(value = "/authorize/{code}", method = RequestMethod.GET)
+    public boolean finishAuthorization(@PathVariable String code){
+        flickrService.doAuthorize(code);
+        return true;
     }
 }

@@ -14,6 +14,10 @@ public class SystemService {
     @Autowired
     private SystemRepository systemRepository;
 
+    public SystemConfig getParameter(String name) {
+        return systemRepository.findFirstByName(name);
+    }
+
     public String getProperty(String name) {
         SystemConfig cfg = systemRepository.findFirstByName(name);
         if (cfg == null) {
@@ -28,5 +32,18 @@ public class SystemService {
             return null;
         }
         return Integer.parseInt(cfg.getValue());
+    }
+
+    public SystemConfig setSystemParameter(String name, String value){
+
+        SystemConfig cfg;
+        cfg = systemRepository.findFirstByName(name);
+        if (cfg == null){
+            cfg = new SystemConfig();
+            cfg.setName(name);
+        }
+        cfg.setValue(value);
+        systemRepository.save(cfg);
+        return cfg;
     }
 }

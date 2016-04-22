@@ -6,6 +6,7 @@ import com.flickr4java.flickr.REST;
 import com.flickr4java.flickr.RequestContext;
 import com.flickr4java.flickr.auth.Auth;
 import com.flickr4java.flickr.auth.AuthInterface;
+import com.flickr4java.flickr.auth.Permission;
 import com.flickr4java.flickr.groups.Group;
 import com.flickr4java.flickr.groups.pools.PoolsInterface;
 import com.flickr4java.flickr.people.PeopleInterface;
@@ -16,6 +17,7 @@ import net.thecamaras.domain.Photo;
 import net.thecamaras.domain.SystemConfig;
 import net.thecamaras.domain.User;
 import org.scribe.model.Token;
+import org.scribe.model.Verifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +44,8 @@ public class FlickrService {
     @Value("${flickr.downloader.secret}")
     private String apiSecret;
 
+    private String userPrefix = "";
+
     @Autowired
     private SystemService systemService;
 
@@ -52,7 +56,7 @@ public class FlickrService {
         try {
             flickr = new Flickr(apiKey, apiSecret, new REST());
             AuthInterface authInterface = flickr.getAuthInterface();
-            Auth token = authInterface.checkToken(new Token(systemService.getProperty(SystemConfig.TOKEN), systemService.getProperty(SystemConfig.TOKEN_SECRET)));
+            Auth token = authInterface.checkToken(new Token(systemService.getProperty(userPrefix + SystemConfig.TOKEN), systemService.getProperty(userPrefix + SystemConfig.TOKEN_SECRET)));
             RequestContext.getRequestContext().setAuth(token);
             logger.info("startup authentication success");
         } catch (Exception e) {
@@ -60,10 +64,44 @@ public class FlickrService {
         }
     }
 
+    public String setUserPrefix(String prefix){
+        this.userPrefix = prefix;
+        return userPrefix;
+    }
+
+    private Token preAuthToken;
+    public String doPreAuthorize() {
+        try {
+            flickr = new Flickr(apiKey, apiSecret, new REST());
+            AuthInterface authInterface = flickr.getAuthInterface();
+            preAuthToken = authInterface.getRequestToken();
+            String url = authInterface.getAuthorizationUrl(preAuthToken, Permission.READ);
+            logger.info("pre authorize success: " + url);
+            return url;
+        } catch (Exception e) {
+            logger.error("pre authorization setup failed");
+        }
+        return null;
+    }
+
+    public void doAuthorize(String code){
+        try {
+            flickr = new Flickr(apiKey, apiSecret, new REST());
+            AuthInterface authInterface = flickr.getAuthInterface();
+            Token authToken = authInterface.getAccessToken(preAuthToken, new Verifier(code));
+            Auth auth = authInterface.checkToken(authToken);
+            systemService.setSystemParameter(userPrefix + SystemConfig.TOKEN, authToken.getToken());
+            systemService.setSystemParameter(userPrefix + SystemConfig.TOKEN_SECRET, authToken.getSecret());
+            logger.info("authorize success");
+        } catch (Exception e) {
+            logger.error("pre authorization setup failed");
+        }
+    }
+
     public void doAuthenticate() {
         try {
             AuthInterface authInterface = flickr.getAuthInterface();
-            Auth token = authInterface.checkToken(new Token(systemService.getProperty(SystemConfig.TOKEN), systemService.getProperty(SystemConfig.TOKEN_SECRET)));
+            Auth token = authInterface.checkToken(new Token(systemService.getProperty(userPrefix + SystemConfig.TOKEN), systemService.getProperty(userPrefix + SystemConfig.TOKEN_SECRET)));
             RequestContext.getRequestContext().setAuth(token);
             logger.info("authentication success");
         } catch (Exception e) {
