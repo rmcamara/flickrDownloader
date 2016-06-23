@@ -60,7 +60,7 @@ public class FlickrService {
             RequestContext.getRequestContext().setAuth(token);
             logger.info("startup authentication success");
         } catch (Exception e) {
-            logger.error("startup authentication failed");
+            logger.error("startup authentication failed", e);
         }
     }
 
@@ -79,7 +79,7 @@ public class FlickrService {
             logger.info("pre authorize success: " + url);
             return url;
         } catch (Exception e) {
-            logger.error("pre authorization setup failed");
+            logger.error("pre authorization setup failed", e);
         }
         return null;
     }
@@ -94,7 +94,7 @@ public class FlickrService {
             systemService.setSystemParameter(userPrefix + SystemConfig.TOKEN_SECRET, authToken.getSecret());
             logger.info("authorize success");
         } catch (Exception e) {
-            logger.error("pre authorization setup failed");
+            logger.error("pre authorization setup failed", e);
         }
     }
 
@@ -105,7 +105,7 @@ public class FlickrService {
             RequestContext.getRequestContext().setAuth(token);
             logger.info("authentication success");
         } catch (Exception e) {
-            logger.error("authentication failed");
+            logger.error("authentication failed", e);
         }
     }
 
