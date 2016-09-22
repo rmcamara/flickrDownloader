@@ -74,6 +74,7 @@ public class DownloadService {
             throw new IllegalStateException("File Name " + fileName + " results in a empty fileName!");
 
         newFileName = newFileName.replaceAll("[^\\p{Print}]", "").trim();
+        newFileName = newFileName.replaceAll("[\\.]{2,}", ".").trim();
         if (newFileName.length() == 0)
             throw new IllegalStateException("File Name " + fileName + " results in a empty fileName!");
         if (newFileName.length() > 250){
@@ -348,13 +349,15 @@ public class DownloadService {
 
             Size size = flickrService.getBestPhoto(photo.getId());
             if (size.getMedia() == Media.video){
-                logger.info("Found Video " + filename + " to " + size.getSource());
+
                 if (videoRepository.getFirstByFlickrId(photo.getId()) == null){
+                    logger.info("Found Video " + filename + " to " + size.getSource());
                     Video video = new Video(photo);
                     video.setFileLocation(size.getSource());
                     videoRepository.save(video);
+                    return true;
                 }
-                return true;
+                return false;
             }
 
             if (!(user.isIgnoreSizeCheck() || ignoreSize) && size.getWidth() < 900 && size.getHeight() < 900) {
@@ -439,7 +442,13 @@ public class DownloadService {
     }
 
     protected File getDestination(User user, boolean createIfMissing) {
-        File destination = new File(downloadRoot, getValidFileName(user.getUsername()));
+        String userName;
+        try{
+            userName = getValidFileName(user.getUsername());
+        } catch (IllegalStateException e){
+            userName = user.getFlickrId();
+        }
+        File destination = new File(downloadRoot, userName);
         if (!destination.exists()) {
             if (!createIfMissing) {
                 return null;
